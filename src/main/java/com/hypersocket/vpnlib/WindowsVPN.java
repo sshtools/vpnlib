@@ -7,12 +7,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 
+import com.sshtools.forker.client.ForkerProcess;
 import com.sshtools.forker.client.PowerShellBuilder;
 
 public class WindowsVPN extends AbstractVPN {
@@ -58,17 +60,20 @@ public class WindowsVPN extends AbstractVPN {
 		@Override
 		public boolean isActive() throws IOException {
 			String l;
-			try (BufferedReader r = new BufferedReader(new InputStreamReader(
-					new PowerShellBuilder("Get-VpnConnection", "-Name", getName()).start().getInputStream()))) {
+			boolean a = false;
+			ForkerProcess process = new PowerShellBuilder("Get-VpnConnection", "-Name", getName()).start();
+			try (BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 				while ((l = r.readLine()) != null) {
-					int idx = l.indexOf(':');
-					if (idx != -1) {
-						if (l.substring(0, idx).trim().equals("ConnectionStatus"))
-							return l.substring(idx + 2).equals("Connected");
+					if (!a) {
+						int idx = l.indexOf(':');
+						if (idx != -1) {
+							if (l.substring(0, idx).trim().equals("ConnectionStatus"))
+								a = l.substring(idx + 2).equals("Connected");
+						}
 					}
 				}
 			}
-			return false;
+			return a;
 		}
 	}
 
@@ -86,11 +91,10 @@ public class WindowsVPN extends AbstractVPN {
 		List<Profile> l = new ArrayList<>();
 		Profile p = null;
 
-		try (BufferedReader r = new BufferedReader(new InputStreamReader(
-				new PowerShellBuilder("Get-VpnConnection", "-Name", getName()).start().getInputStream()))) {
+		ForkerProcess process = new PowerShellBuilder("Get-VpnConnection").start();
+		try (BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 			String line;
 			while ((line = r.readLine()) != null) {
-				System.out.println(line);
 				if (StringUtils.isBlank(line)) {
 					p = null;
 				} else {
@@ -110,6 +114,11 @@ public class WindowsVPN extends AbstractVPN {
 					}
 				}
 			}
+			try {
+				process.waitFor(30, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				throw new IOException("Timed out waiting for VPN configurations.");
+			}
 		}
 		return l;
 	}
@@ -118,8 +127,8 @@ public class WindowsVPN extends AbstractVPN {
 	public boolean isAvailable() {
 		try {
 			if (SystemUtils.IS_OS_WINDOWS) {
-				IOUtils.copy(new PowerShellBuilder("[Enviornment]::OSVersion").start().getInputStream(),
-						new NullOutputStream());
+				IOUtils.copy(new PowerShellBuilder("[Environment]::OSVersion").redirectErrorStream(true).start()
+						.getInputStream(), new NullOutputStream());
 				return true;
 			}
 		} catch (IOException psne) {
