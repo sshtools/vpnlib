@@ -1,0 +1,4 @@
+com.hypersocket.vpnlib.NetworkManager
+com.hypersocket.vpnlib.OpenVPN2
+com.hypersocket.vpnlib.GenericVPN
+com.hypersocket.vpnlib.WindowsVPN

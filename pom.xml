@@ -1,0 +1,62 @@
+<!-- Copyright (c) 2019 LogonBox Limited. All rights reserved. This program 
+	and the accompanying materials are made available under the terms of the 
+	GNU Public License v3.0 which accompanies this distribution, and is available 
+	at http://www.gnu.org/licenses/gpl.html -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>vpnlib</artifactId>
+	<name>VPNLib</name>
+	<version>0.0.1-SNAPSHOT</version>
+	<groupId>com.hypersocket</groupId>
+    <description>Simple library for querying and controlling common VPN clients from Java</description>
+	<build>
+		<directory>target</directory>
+		<finalName>${project.artifactId}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<!-- Need at least 3.7 for automatic modules to work properly -->
+				<version>3.8.0</version>
+				<configuration>
+					<source>11</source>
+					<target>11</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
+	<dependencies>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>forker-client</artifactId>
+			<version>1.6-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+
+	<profiles>
+	</profiles>
+
+	<repositories>		
+		<repository>
+			<id>opensource-releases</id>
+			<name>opensource-releases</name>
+			<url>http://artifactory.javassh.com/opensource-releases</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<releases/>
+		</repository>
+		<repository>
+			<id>opensource-snapshots</id>
+			<name>opensource-snapshots</name>
+			<url>http://artifactory.javassh.com/opensource-snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots/>
+		</repository>
+	</repositories>
+
+</project>
