@@ -1,6 +1,6 @@
 package com.sshtools.vpnlib;
 
-import static com.sshtools.forker.client.OSCommand.runCommand;
+import static com.sshtools.forker.client.OSCommand.runCommandAndCaptureOutput;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,7 +31,10 @@ public class WindowsVPN extends AbstractVPN {
 
 		@Override
 		public void stop() throws IOException {
-			runCommand("rasdial", getName(), "/DISCONNECT");
+			for(String s : runCommandAndCaptureOutput("rasdial", getName(), "/DISCONNECT")) {
+				if(s.toLowerCase().contains("remote access error"))
+					throw new IOException(s);
+			}
 			waitForStateChange(Integer.parseInt(
 					getProperties().getOrDefault(PROP_DISCONNECT_TIMEOUT, String.valueOf(DEFAULT_DISCONNECT_TIMEOUT))),
 					false);
@@ -39,7 +42,10 @@ public class WindowsVPN extends AbstractVPN {
 
 		@Override
 		public void start() throws IOException {
-			runCommand("rasdial", getName());
+			for(String s : runCommandAndCaptureOutput("rasdial", getName())) {
+				if(s.toLowerCase().contains("remote access error"))
+					throw new IOException(s);
+			}
 			waitForStateChange(Integer.parseInt(
 					getProperties().getOrDefault(PROP_CONNECT_TIMEOUT, String.valueOf(DEFAULT_CONNECT_TIMEOUT))), true);
 		}
