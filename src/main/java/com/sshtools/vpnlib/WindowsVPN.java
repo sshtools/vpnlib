@@ -31,8 +31,8 @@ public class WindowsVPN extends AbstractVPN {
 
 		@Override
 		public void stop() throws IOException {
-			for(String s : runCommandAndCaptureOutput("rasdial", getName(), "/DISCONNECT")) {
-				if(s.toLowerCase().contains("remote access error"))
+			for (String s : runCommandAndCaptureOutput("rasdial", getName(), "/DISCONNECT")) {
+				if (s.toLowerCase().contains("remote access error"))
 					throw new IOException(s);
 			}
 			waitForStateChange(Integer.parseInt(
@@ -42,8 +42,8 @@ public class WindowsVPN extends AbstractVPN {
 
 		@Override
 		public void start() throws IOException {
-			for(String s : runCommandAndCaptureOutput("rasdial", getName())) {
-				if(s.toLowerCase().contains("remote access error"))
+			for (String s : runCommandAndCaptureOutput("rasdial", getName())) {
+				if (s.toLowerCase().contains("remote access error"))
 					throw new IOException(s);
 			}
 			waitForStateChange(Integer.parseInt(
@@ -68,7 +68,12 @@ public class WindowsVPN extends AbstractVPN {
 		public boolean isActive() throws IOException {
 			String l;
 			boolean a = false;
-			ForkerProcess process = new PowerShellBuilder("Get-VpnConnection", "-Name", getName()).start();
+			String[] cmd;
+			if (getOptions().contains(Option.PUBLIC))
+				cmd = new String[] { "Get-VpnConnection", "-AllUserConnection", "-Name", getName() };
+			else
+				cmd = new String[] { "Get-VpnConnection", "-Name", getName() };
+			ForkerProcess process = new PowerShellBuilder(cmd).start();
 			try (BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 				while ((l = r.readLine()) != null) {
 					if (!a) {
@@ -96,17 +101,17 @@ public class WindowsVPN extends AbstractVPN {
 	@Override
 	public List<Profile> getConfigurations(Option... options) throws IOException {
 		List<Profile> l = new ArrayList<>();
-		Profile p = null;
 		List<Option> ol = Arrays.asList(options);
 		if (ol.isEmpty() || ol.contains(Option.USER))
-			populate(l, p, "Get-VpnConnection");
+			populate(l, Arrays.asList(Option.USER), "Get-VpnConnection");
 		if (ol.isEmpty() || ol.contains(Option.PUBLIC))
-			populate(l, p, "Get-VpnConnection", "-AllUserConnection");
+			populate(l, Arrays.asList(Option.PUBLIC), "Get-VpnConnection", "-AllUserConnection");
 		return l;
 	}
 
-	protected void populate(List<Profile> l, Profile p, String... command) throws IOException {
+	protected void populate(List<Profile> l, List<Option> options, String... command) throws IOException {
 		ForkerProcess process = new PowerShellBuilder(command).start();
+		Profile p = null;
 		try (BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 			String line;
 			while ((line = r.readLine()) != null) {
@@ -115,6 +120,7 @@ public class WindowsVPN extends AbstractVPN {
 				} else {
 					if (p == null) {
 						p = new WindowsVPNProfile(this);
+						p.getOptions().addAll(options);
 						l.add(p);
 					}
 					int idx = line.indexOf(':');
@@ -123,6 +129,8 @@ public class WindowsVPN extends AbstractVPN {
 						String v = line.substring(idx + 2);
 						if (n.equals("Name")) {
 							p.setName(v);
+						} else if (n.equals("Guid")) {
+							p.setId(v.substring(1, v.length() - 1));
 						} else if (n.equals("Guid")) {
 							p.setId(v.substring(1, v.length() - 1));
 						}

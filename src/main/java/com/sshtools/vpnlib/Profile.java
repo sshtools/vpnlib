@@ -1,7 +1,9 @@
 package com.sshtools.vpnlib;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -11,6 +13,7 @@ public abstract class Profile {
 	private String name;
 	private Map<String, String> properties = new HashMap<>();
 	private VPN vpn;
+	private List<Option> options = new ArrayList<>();
 
 	public Profile(VPN vpn) {
 		this(UUID.randomUUID().toString(), vpn);
@@ -25,6 +28,10 @@ public abstract class Profile {
 		this.id = id;
 		this.name = name;
 		this.vpn = vpn;
+	}
+	
+	public List<Option> getOptions() {
+		return options;
 	}
 	
 	public VPN getVPN() {
