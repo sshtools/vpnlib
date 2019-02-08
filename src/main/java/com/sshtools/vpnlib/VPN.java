@@ -1,4 +1,4 @@
-package com.hypersocket.vpnlib;
+package com.sshtools.vpnlib;
 
 import java.io.IOException;
 import java.util.List;
@@ -17,7 +17,7 @@ public interface VPN {
 
 	String getName();
 	
-	List<Profile> getConfigurations() throws IOException;
+	List<Profile> getConfigurations(Option... options) throws IOException;
  
 	void configure();
 

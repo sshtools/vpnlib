@@ -1,4 +1,4 @@
-package com.hypersocket.vpnlib;
+package com.sshtools.vpnlib;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public abstract class AbstractPreferencedBasedVPN extends AbstractVPN {
 	}
 
 	@Override
-	public List<Profile> getConfigurations() throws IOException {
+	public List<Profile> getConfigurations(Option... options) throws IOException {
 		try {
 			List<Profile> p = new ArrayList<>();
 			for (String c : preferences.childrenNames())

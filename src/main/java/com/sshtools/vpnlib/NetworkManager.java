@@ -1,4 +1,4 @@
-package com.hypersocket.vpnlib;
+package com.sshtools.vpnlib;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ public class NetworkManager extends AbstractVPN {
 	}
 
 	@Override
-	public List<Profile> getConfigurations() throws IOException {
+	public List<Profile> getConfigurations(Option... options) throws IOException {
 		List<Profile> p = new ArrayList<>();
 		for (String line : OSCommand.runCommandAndCaptureOutput("nmcli", "-t", "connection", "show")) {
 			String[] args = line.split(":");

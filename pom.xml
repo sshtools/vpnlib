@@ -8,7 +8,7 @@
 	<artifactId>vpnlib</artifactId>
 	<name>VPNLib</name>
 	<version>0.0.1-SNAPSHOT</version>
-	<groupId>com.hypersocket</groupId>
+	<groupId>com.sshtools</groupId>
     <description>Simple library for querying and controlling common VPN clients from Java</description>
 	<build>
 		<directory>target</directory>

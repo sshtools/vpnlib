@@ -1,0 +1,4 @@
+com.sshtools.vpnlib.NetworkManager
+com.sshtools.vpnlib.OpenVPN2
+com.sshtools.vpnlib.GenericVPN
+com.sshtools.vpnlib.WindowsVPN

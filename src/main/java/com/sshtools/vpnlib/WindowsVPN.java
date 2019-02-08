@@ -1,4 +1,4 @@
-package com.hypersocket.vpnlib;
+package com.sshtools.vpnlib;
 
 import static com.sshtools.forker.client.OSCommand.runCommand;
 
@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -87,11 +88,19 @@ public class WindowsVPN extends AbstractVPN {
 	}
 
 	@Override
-	public List<Profile> getConfigurations() throws IOException {
+	public List<Profile> getConfigurations(Option... options) throws IOException {
 		List<Profile> l = new ArrayList<>();
 		Profile p = null;
+		List<Option> ol = Arrays.asList(options);
+		if (ol.isEmpty() || ol.contains(Option.USER))
+			populate(l, p, "Get-VpnConnection");
+		if (ol.isEmpty() || ol.contains(Option.PUBLIC))
+			populate(l, p, "Get-VpnConnection", "-AllUserConnection");
+		return l;
+	}
 
-		ForkerProcess process = new PowerShellBuilder("Get-VpnConnection").start();
+	protected void populate(List<Profile> l, Profile p, String... command) throws IOException {
+		ForkerProcess process = new PowerShellBuilder(command).start();
 		try (BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 			String line;
 			while ((line = r.readLine()) != null) {
@@ -120,7 +129,6 @@ public class WindowsVPN extends AbstractVPN {
 				throw new IOException("Timed out waiting for VPN configurations.");
 			}
 		}
-		return l;
 	}
 
 	@Override

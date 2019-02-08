@@ -1,18 +1,23 @@
-package com.hypersocket.vpnlib;
+package com.sshtools.vpnlib;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
+/**
+ * Static methods to access the list of discovered VPNs and configurrations, and a simple 
+ * commandline tool to list vpns, profiles and start and stop them.
+ */
 public class WAN {
 
 	public static List<VPN> getVPNs() {
 		List<VPN> v = new ArrayList<>();
-		for (VPN vpn : ServiceLoader.load(VPN.class)) {
+		final ServiceLoader<VPN> services = ServiceLoader.load(VPN.class);
+		for (VPN vpn : services) {
 			if (vpn.isAvailable())
 				v.add(vpn);
-		}
+		} 
 		return v;
 	}
 
@@ -49,6 +54,16 @@ public class WAN {
 				for (Profile p : v.getConfigurations()) {
 					System.out.println("   " + p);
 				}
+			}
+		} else if (args.length == 1 && args[0].equals("profiles")) {
+			for (VPN v : getVPNs()) {
+				for (Profile p : v.getConfigurations()) {
+					System.out.println(p);
+				}
+			}
+		} else if (args.length == 1 && args[0].equals("vpns")) {
+			for (VPN v : getVPNs()) {
+				System.out.println(v);
 			}
 		} else {
 			String op = args[0];

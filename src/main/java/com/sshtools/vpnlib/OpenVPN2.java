@@ -1,4 +1,4 @@
-package com.hypersocket.vpnlib;
+package com.sshtools.vpnlib;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
