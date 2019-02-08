@@ -5,8 +5,10 @@ import static com.sshtools.forker.client.OSCommand.runCommandAndCaptureOutput;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -43,6 +45,8 @@ public class WindowsVPN extends AbstractVPN {
 		@Override
 		public void start() throws IOException {
 			for (String s : runCommandAndCaptureOutput("rasdial", getName())) {
+				if (s.toLowerCase().contains("you are already connected"))
+					throw new IOException(s);
 				if (s.toLowerCase().contains("remote access error"))
 					throw new IOException(s);
 			}
@@ -66,26 +70,34 @@ public class WindowsVPN extends AbstractVPN {
 
 		@Override
 		public boolean isActive() throws IOException {
-			String l;
-			boolean a = false;
-			String[] cmd;
-			if (getOptions().contains(Option.PUBLIC))
-				cmd = new String[] { "Get-VpnConnection", "-AllUserConnection", "-Name", getName() };
-			else
-				cmd = new String[] { "Get-VpnConnection", "-Name", getName() };
-			ForkerProcess process = new PowerShellBuilder(cmd).start();
-			try (BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-				while ((l = r.readLine()) != null) {
-					if (!a) {
-						int idx = l.indexOf(':');
-						if (idx != -1) {
-							if (l.substring(0, idx).trim().equals("ConnectionStatus"))
-								a = l.substring(idx + 2).equals("Connected");
-						}
-					}
-				}
+
+			// While Get-VpnConnection *mostly* works, it seems it does not display the
+			// correct connection status of 'AllUserConnection' profiles, i.e. those
+			// we actually want to use. If you start a connection using 'rasdial <name>',
+			// then Get-VpnConnection will continue to show the connection as Disconnected
+			// even though it is. So instead, we examine the available network
+			// interfaces, which should contain one that has the same name as the
+			// this profile
+			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+				NetworkInterface nif = en.nextElement();
+				if (nif.isUp() && getName().equals(nif.getDisplayName()))
+					return true;
 			}
-			return a;
+			return false;
+
+			/*
+			 * 
+			 * 
+			 * String l; boolean a = false; String[] cmd; if
+			 * (getOptions().contains(Option.PUBLIC)) cmd = new String[] {
+			 * "Get-VpnConnection", "-AllUserConnection", "-Name", getName() }; else cmd =
+			 * new String[] { "Get-VpnConnection", "-Name", getName() }; ForkerProcess
+			 * process = new PowerShellBuilder(cmd).start(); try (BufferedReader r = new
+			 * BufferedReader(new InputStreamReader(process.getInputStream()))) { while ((l
+			 * = r.readLine()) != null) { if (!a) { int idx = l.indexOf(':'); if (idx != -1)
+			 * { if (l.substring(0, idx).trim().equals("ConnectionStatus")) a =
+			 * l.substring(idx + 2).equals("Connected"); } } } } return a;
+			 */
 		}
 	}
 
