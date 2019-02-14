@@ -9,7 +9,9 @@ import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
@@ -27,8 +29,15 @@ public class WindowsVPN extends AbstractVPN {
 	private final static String PROP_DISCONNECT_TIMEOUT = "disconnectTimeout";
 
 	public class WindowsVPNProfile extends Profile {
+
 		public WindowsVPNProfile(VPN vpn) {
 			super(vpn);
+		}
+
+		@Override
+		public Set<Class<?>> getRequiredCredentials() throws IOException {
+			return getOptions().contains(Option.PUBLIC) ? new HashSet<>(Arrays.asList(UsernameCredentials.class))
+					: super.getRequiredCredentials();
 		}
 
 		@Override
@@ -43,8 +52,21 @@ public class WindowsVPN extends AbstractVPN {
 		}
 
 		@Override
-		public void start() throws IOException {
-			for (String s : runCommandAndCaptureOutput("rasdial", getName())) {
+		public void start(Credentials... credentials) throws IOException {
+			String[] cmds = null;
+			if (credentials.length > 0) {
+				for (Credentials c : credentials) {
+					if (c instanceof UsernameCredentials) {
+						UsernameCredentials uc = (UsernameCredentials) c;
+						cmds = new String[] { "rasdial", getName(), uc.getUsername(), new String(uc.getPassword()) };
+					}
+				}
+				if (cmds == null)
+					throw new IOException(String.format("Wrong type of credentials supplied, required %s",
+							UsernameCredentials.class));
+			} else
+				cmds = new String[] { "rasdial", getName() };
+			for (String s : runCommandAndCaptureOutput(cmds)) {
 				if (s.toLowerCase().contains("you are already connected"))
 					throw new IOException(s);
 				if (s.toLowerCase().contains("remote access error"))
@@ -123,7 +145,7 @@ public class WindowsVPN extends AbstractVPN {
 
 	protected void populate(List<Profile> l, List<Option> options, String... command) throws IOException {
 		ForkerProcess process = new PowerShellBuilder(command).start();
-		Profile p = null;
+		WindowsVPNProfile p = null;
 		try (BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 			String line;
 			while ((line = r.readLine()) != null) {
@@ -141,8 +163,6 @@ public class WindowsVPN extends AbstractVPN {
 						String v = line.substring(idx + 2);
 						if (n.equals("Name")) {
 							p.setName(v);
-						} else if (n.equals("Guid")) {
-							p.setId(v.substring(1, v.length() - 1));
 						} else if (n.equals("Guid")) {
 							p.setId(v.substring(1, v.length() - 1));
 						}

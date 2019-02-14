@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
- * Static methods to access the list of discovered VPNs and configurrations, and a simple 
- * commandline tool to list vpns, profiles and start and stop them.
+ * Static methods to access the list of discovered VPNs and configurrations, and
+ * a simple commandline tool to list vpns, profiles and start and stop them.
  */
 public class WAN {
 
@@ -17,7 +19,7 @@ public class WAN {
 		for (VPN vpn : services) {
 			if (vpn.isAvailable())
 				v.add(vpn);
-		} 
+		}
 		return v;
 	}
 
@@ -81,7 +83,20 @@ public class WAN {
 			if (op.equals("stop")) {
 				profile.stop();
 			} else if (op.equals("start")) {
-				profile.start();
+				String username = null;
+				String pw = null;
+				for (int i = 2; i < args.length; i++) {
+					if (args[i].startsWith("--username="))
+						username = args[i].substring(11);
+					if (args[i].startsWith("--password="))
+						pw = args[i].substring(11);
+				}
+				if (StringUtils.isNotBlank(username)) {
+					if (!profile.getRequiredCredentials().contains(UsernameCredentials.class))
+						throw new IllegalArgumentException("This VPN does not require credentials.");
+					profile.start(new UsernameCredentials(username, pw.toCharArray()));
+				} else
+					profile.start();
 			} else if (op.equals("show")) {
 				System.out.println(profile);
 			} else

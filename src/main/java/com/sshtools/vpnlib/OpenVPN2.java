@@ -13,23 +13,31 @@ import com.sshtools.forker.client.OSCommand;
 
 public class OpenVPN2 extends AbstractPreferencedBasedVPN {
 	private final static String PROP_CONFIGURATION_FILE = "configurationFile";
+	private final static String PROP_OPEN_VPN_COMMAND = "openVPNCommand";
 
 	public OpenVPN2() {
-		super(Preferences.systemNodeForPackage(OpenVPN2.class));
+		super(Preferences.systemNodeForPackage(OpenVPN2.class).node("OpenVPN2"));
+	}
+
+	public OpenVPN2(Preferences preferences) {
+		super(preferences);
 	}
 
 	@Override
 	public boolean isAvailable() {
 		try {
-			/* TODO this shows OSCommand needs more convenience functions, namely capturing output (stderr) and
-			   ignoring exit codes (don't throw exception) */
+			/*
+			 * TODO this shows OSCommand needs more convenience functions, namely capturing
+			 * output (stderr) and ignoring exit codes (don't throw exception)
+			 */
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			int ret = OSCommand.runCommand(bos, Arrays.asList("openvpn", "--version"));
-			if(ret != 1)
+			int ret = OSCommand.runCommand(bos,
+					Arrays.asList(preferences.get(PROP_OPEN_VPN_COMMAND, "openvpn"), "--version"));
+			if (ret != 1)
 				throw new IllegalStateException("Unexpected return code.");
-			BufferedReader r  = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bos.toByteArray())));
+			BufferedReader r = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bos.toByteArray())));
 			String l = r.readLine();
-			if(l != null && l.matches(".*OpenVPN 2.*"))
+			if (l != null && l.matches(".*OpenVPN 2.*"))
 				return true;
 		} catch (Exception e) {
 		}
@@ -62,8 +70,8 @@ public class OpenVPN2 extends AbstractPreferencedBasedVPN {
 
 		@Override
 		protected String[] getStartCommandArgs() {
-			return new String[] { "openvpn", getProperties().getOrDefault(PROP_CONFIGURATION_FILE,
-					System.getProperty("user.home", "") + File.separator + ".vpnlib.ovpn") };
+			return new String[] { preferences.get(PROP_OPEN_VPN_COMMAND, "openvpn"), getProperties().getOrDefault(
+					PROP_CONFIGURATION_FILE, System.getProperty("user.home", "") + File.separator + ".vpnlib.ovpn") };
 		}
 	}
 }

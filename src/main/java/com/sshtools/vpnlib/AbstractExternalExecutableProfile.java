@@ -28,7 +28,7 @@ public abstract class AbstractExternalExecutableProfile extends Profile {
 	protected abstract String[] getStartCommandArgs();
 
 	@Override
-	public void start() throws IOException {
+	public void start(Credentials... credentials) throws IOException {
 		process = runCommand(getStartCommandArgs());
 	}
 

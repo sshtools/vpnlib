@@ -2,9 +2,11 @@ package com.sshtools.vpnlib;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public abstract class Profile {
@@ -18,26 +20,26 @@ public abstract class Profile {
 	public Profile(VPN vpn) {
 		this(UUID.randomUUID().toString(), vpn);
 	}
-	
+
 	public Profile(String id, VPN vpn) {
 		this.id = id;
 		this.vpn = vpn;
 	}
-	
+
 	public Profile(String id, String name, VPN vpn) {
 		this.id = id;
 		this.name = name;
 		this.vpn = vpn;
 	}
-	
+
 	public List<Option> getOptions() {
 		return options;
 	}
-	
+
 	public VPN getVPN() {
 		return vpn;
 	}
-	
+
 	public Map<String, String> getProperties() {
 		return properties;
 	}
@@ -58,18 +60,22 @@ public abstract class Profile {
 		this.name = name;
 	}
 
+	public Set<Class<?>> getRequiredCredentials() throws IOException {
+		return Collections.emptySet();
+	}
+
 	public abstract boolean isActive() throws IOException;
 
-	public abstract void start() throws IOException;
+	public abstract void start(Credentials... credentials) throws IOException;
 
 	public abstract void stop() throws IOException;
 
 	@Override
 	public String toString() {
 		try {
-			return "[id=" + id + ", vpn=" + vpn + ", name=" + name + ", active=" + isActive() + "]";
+			return "[id=" + id + ", vpn=" + vpn + ", name=" + name + ", active=" + isActive() + ", options="  + getOptions() + "]";
 		} catch (IOException e) {
-			return "[id=" + id + ", vpn=" + vpn + ", name=" + name + ", active=<error>]";
+			return "[id=" + id + ", vpn=" + vpn + ", name=" + name + ", active=<error>, options="  + getOptions() + "]";
 		}
 	}
 

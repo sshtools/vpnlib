@@ -3,7 +3,7 @@ package com.sshtools.vpnlib;
 import java.io.IOException;
 
 public abstract class AbstractVPN implements VPN {
-
+	
 	@Override
 	public String toString() {
 		return getName();

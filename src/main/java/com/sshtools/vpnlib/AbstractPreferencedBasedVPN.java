@@ -9,7 +9,7 @@ import java.util.prefs.Preferences;
 
 public abstract class AbstractPreferencedBasedVPN extends AbstractVPN {
 
-	private Preferences preferences;
+	protected Preferences preferences;
 
 	protected AbstractPreferencedBasedVPN(Preferences preferences) {
 		this.preferences = preferences;

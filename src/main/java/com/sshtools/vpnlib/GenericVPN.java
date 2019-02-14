@@ -14,7 +14,11 @@ public class GenericVPN extends AbstractPreferencedBasedVPN {
 	private final static String PROP_STOP_WAIT = "stopWait";
 
 	public GenericVPN() {
-		super(Preferences.systemNodeForPackage(GenericVPN.class));
+		super(Preferences.systemNodeForPackage(GenericVPN.class).node("OpenVPN2"));
+	}
+	
+	public GenericVPN(Preferences preferences) {
+		super(preferences);
 	}
 
 	@Override
@@ -51,7 +55,7 @@ public class GenericVPN extends AbstractPreferencedBasedVPN {
 		}
 
 		@Override
-		public void start() throws IOException {
+		public void start(Credentials... credentials) throws IOException {
 			super.start();
 			int sw = Integer.parseInt(getProperties().getOrDefault(PROP_START_WAIT, String.valueOf(DEFAULT_START_WAIT)));
 			if(sw > 0) {

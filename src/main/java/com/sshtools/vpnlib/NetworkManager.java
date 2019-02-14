@@ -29,7 +29,7 @@ public class NetworkManager extends AbstractVPN {
 		for (String line : OSCommand.runCommandAndCaptureOutput("nmcli", "-t", "connection", "show")) {
 			String[] args = line.split(":");
 			if (args.length > 0 && args[2].equals("vpn")) {
-				p.add(new Profile(args[1], args[0], this) {
+				final Profile profile = new Profile(args[1], args[0], this) {
 					@Override
 					public boolean isActive() throws IOException {
 						return OSCommand
@@ -38,7 +38,7 @@ public class NetworkManager extends AbstractVPN {
 					}
 
 					@Override
-					public void start() throws IOException {
+					public void start(Credentials... credentials) throws IOException {
 						OSCommand.runCommand("nmcli", "-t", "connection", "up", getId());
 						waitForStateChange(Integer.parseInt(getProperties().getOrDefault(PROP_CONNECT_TIMEOUT,
 								String.valueOf(DEFAULT_CONNECT_TIMEOUT))), true);
@@ -64,7 +64,20 @@ public class NetworkManager extends AbstractVPN {
 
 						throw new IOException("Timed-out waiting for VPN connection.");
 					}
-				});
+				};
+
+				/* Get extra properties for this VPN */
+				for (String cline : OSCommand.runCommandAndCaptureOutput("nmcli", "-t", "connection", "show",
+						profile.getId())) {
+					if (cline.equals("connection.permissions:")) {
+						profile.getOptions().add(Option.PUBLIC);
+					}
+					else if (cline.startsWith("connection.permissions:")) {
+						profile.getOptions().add(Option.USER);
+					}
+				}
+
+				p.add(profile);
 			}
 		}
 		return p;

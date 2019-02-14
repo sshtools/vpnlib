@@ -6,7 +6,7 @@ import java.util.List;
 public interface VPN {
 	
 	boolean isSystem();
-	
+
 	Profile createConfiguration() throws IOException;
 	
 	void addConfiguration(Profile profile) throws IOException;
